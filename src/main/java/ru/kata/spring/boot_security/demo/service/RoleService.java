@@ -11,7 +11,7 @@ public interface RoleService {
 
     Set<Role> getRolesById(List<Long> ids);
 
-    void setRolesToUser(User user, List<Long> rolesIds);
+    User setRolesToUser(User user, List<Long> rolesIds);
 
     void saveRole(Role role);
 

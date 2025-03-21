@@ -1,4 +1,3 @@
-
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +37,10 @@ public class RoleServiceImp implements RoleService {
 
     @Override
     @Transactional
-    public void setRolesToUser(User user, List<Long> rolesIds) {
+    public User setRolesToUser(User user, List<Long> rolesIds) {
         Set<Role> roles = getRolesById(rolesIds);
         user.setRoles(roles);
+        return user;
     }
 
     @Override

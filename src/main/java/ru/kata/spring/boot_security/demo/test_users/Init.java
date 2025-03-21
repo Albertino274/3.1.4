@@ -1,4 +1,3 @@
-
 package ru.kata.spring.boot_security.demo.test_users;
 
 import jakarta.annotation.PostConstruct;
@@ -11,8 +10,7 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.*;
 
 @Component
 public class Init {
@@ -43,8 +41,7 @@ public class Init {
             adminRole.setName("ADMIN");
             roleService.saveRole(adminRole);
             System.out.println("Роль ADMIN создана");
-        }
-        else {
+        } else {
             System.out.println("РОЛЬ ADMIN НЕ СОЗДАНА!");
         }
 
@@ -55,7 +52,7 @@ public class Init {
             user.setEmail("user@example.com");
             user.setPassword("00000000");
             user.setPhoneNumber("+1(404) 678-9012");
-            user.setAddress("123 Peachtree St, Atlanta, GA 30301, USA");
+            user.setAge(35);
             user.setRoles(new HashSet<>(Collections.singleton(roleService.findRoleByName("USER"))));
 
             userService.saveUser(user, Collections.singletonList(1L));
@@ -69,10 +66,19 @@ public class Init {
             admin.setEmail("admin@example.com");
             admin.setPassword(("00000000"));
             admin.setPhoneNumber("+1(404) 901-2345");
-            admin.setAddress("789 Peachtree St, Atlanta, GA 30301, USA");
-            admin.setRoles(new HashSet<>(Collections.singleton(roleService.findRoleByName("ADMIN"))));
+            admin.setAge(25);
 
-            userService.saveUser(admin, Collections.singletonList(2L));
+            Set<Role> roles = new HashSet<>();
+            roles.add(roleService.findRoleByName("ADMIN"));
+            roles.add(roleService.findRoleByName("USER"));
+
+            admin.setRoles(roles);
+
+            List<Long> rolesIds = new ArrayList<>();
+            rolesIds.add(1L);
+            rolesIds.add(2L);
+
+            userService.saveUser(admin, rolesIds);
             System.out.println(admin.getPassword());
         }
     }

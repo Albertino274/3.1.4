@@ -22,8 +22,8 @@ public class User implements UserDetails {
     @Column(name = "lastName")
     private String lastName;
 
-    @Column(name = "address")
-    private String address;
+    @Column(name = "age")
+    private Integer age;
 
     @Column(name = "phoneNumber")
     private String phoneNumber;
@@ -49,10 +49,10 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User (String firstName, String lastName, String address, String phoneNumber, String email) {
+    public User(String firstName, String lastName, Integer age, String phoneNumber, String email) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.address = address;
+        this.age = age;
         this.phoneNumber = phoneNumber;
         this.email = email;
     }
@@ -79,14 +79,6 @@ public class User implements UserDetails {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public String getPhoneNumber() {
@@ -131,7 +123,7 @@ public class User implements UserDetails {
                 + "id=" + id
                 + ", firstName='" + firstName + '\''
                 + ", lastName='" + lastName + '\''
-                + ", address='" + address + '\''
+                + ", address='" + age + '\''
                 + ", phoneNumber='" + phoneNumber + '\''
                 + ", email='" + email + '\'' + '}';
     }
@@ -142,7 +134,7 @@ public class User implements UserDetails {
         User user = (User) o;
         return Objects.equals(firstName, user.firstName)
                 && Objects.equals(lastName, user.lastName)
-                && Objects.equals(address, user.address)
+                && Objects.equals(age, user.age)
                 && Objects.equals(phoneNumber, user.phoneNumber)
                 && Objects.equals(id, user.id)
                 && Objects.equals(email, user.email);
@@ -150,7 +142,7 @@ public class User implements UserDetails {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstName, lastName, address, phoneNumber, email);
+        return Objects.hash(id, firstName, lastName, age, phoneNumber, email);
     }
 
     @Override
@@ -181,6 +173,14 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
     }
 
     @Override

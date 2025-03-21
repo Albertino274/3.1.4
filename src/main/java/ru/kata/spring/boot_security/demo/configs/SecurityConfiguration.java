@@ -1,60 +1,53 @@
 package ru.kata.spring.boot_security.demo.configs;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
+
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-
     private final SuccessUserHandler successUserHandler;
 
+    @Autowired
     public SecurityConfiguration(SuccessUserHandler successUserHandler) {
         this.successUserHandler = successUserHandler;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/index").permitAll() // Разрешить доступ всем
-                        .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
-                )
-                .formLogin(form -> form
-                        .successHandler(successUserHandler) // Указать обработчик успешной аутентификации
-                        .permitAll() // Разрешить доступ к форме входа всем
-                )
-                .logout(logout -> logout
-                        .permitAll() // Разрешить доступ к выходу всем
-                );
+    public static PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer :: disable)
+                .authorizeHttpRequests((authz) -> authz
+                        .requestMatchers("/", "/registration").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user_page").hasAnyRole("ADMIN", "USER")
+                        .anyRequest().authenticated())
+                .formLogin(formLog -> formLog
+                        .loginPage("/login")
+                        .usernameParameter("email")
+                        .successHandler(successUserHandler)
+                        .permitAll())
+                .rememberMe(rememberMe -> rememberMe
+                        .key("Xk8q2$Dv5@mWp9z!Lt7*Rn4%Fg1&Hs3^Jh6"))
+                .logout(logout -> logout.logoutUrl("/logout").permitAll());
         return http.build();
     }
 
-    // Аутентификация inMemory
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("user")) // Используем PasswordEncoder для кодирования пароля
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(user);
-    }
-
-    // Бин для кодирования паролей
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SpringSecurityDialect springSecurityDialect() {
+        return new SpringSecurityDialect();
     }
 }

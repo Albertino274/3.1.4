@@ -6,7 +6,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
@@ -27,81 +26,62 @@ public class AdminsController {
         this.roleService = roleService;
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public String getAdminPage(Model model) {
-        return "admin's_pages/admin_start_page";
-    }
-
-    @GetMapping(value = "/users")
-    public String getUsers(Model model) {
+    public void addAttributesToMethods(Model model, Principal principal) {
+        User user = userService.getUserByEmail(principal.getName());
+        model.addAttribute("userTitle", user);
+        model.addAttribute("newUser", new User());
         model.addAttribute("title", "Список пользователей:");
         model.addAttribute("user_list", userService.getUsers());
-        return "admin's_pages/user_list";
+        model.addAttribute("isUserRole", userService.isUser(user));
+        model.addAttribute("isAdminRole", userService.isAdmin(user));
     }
 
-    @GetMapping(value = "/add_user")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public String createNewUserForm(Model model) {
-        model.addAttribute("newUser", new User());
-        model.addAttribute("roles", roleService.getAllRoles());
-        model.addAttribute("byUser", false);
-        model.addAttribute("isAdmin", false);
-        model.addAttribute("isUser", true);
-        return "new_user";
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public String getUsers(Model model, Principal principal) {
+        addAttributesToMethods(model, principal);
+        return "admin's_pages/user_list";
     }
 
     @PostMapping(value = "/save")
     @PreAuthorize("hasAuthority('ADMIN')")
     public String saveUser(@ModelAttribute("newUser") User user,
-                           @RequestParam(value = "rolesIds", required = false) List<Long> rolesIds) {
+                           @RequestParam(value = "rolesIds", required = false) List<Long> rolesIds,
+                           BindingResult bindingResult,
+                           Model model,
+                           Principal principal) {
+        if (bindingResult.hasErrors()) {
+            addAttributesToMethods(model, principal);
+            return "/admin's_pages/user_list";
+        }
         userService.saveUser(user, rolesIds);
-        return "redirect:/admin/users";
-    }
-
-    @GetMapping(value = "/user_page")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ModelAndView getUserPage(Principal principal) {
-        ModelAndView mav = new ModelAndView("/user_page");
-        mav.addObject("user", userService.getUserByEmail(principal.getName()));
-        mav.addObject("isUserRole", false);
-        return mav;
-    }
-
-    @GetMapping(value = "/edit")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ModelAndView editUserForm(@RequestParam(value = "id") Long id) {
-        ModelAndView mav = new ModelAndView("/admin's_pages/edit_user");
-        User user = userService.getUser(id);
-
-        mav.addObject("user", user);
-        mav.addObject("isAdmin", userService.isAdmin(user));
-        mav.addObject("isUser", userService.isUser(user));
-        mav.addObject("allRoles", roleService.getAllRoles());
-        return mav;
+        return "redirect:/admin";
     }
 
     @PostMapping(value = "/save_edit")
     @PreAuthorize("hasAuthority('ADMIN')")
     public String saveEditUser(@ModelAttribute("user") User user,
                                @RequestParam(value = "rolesIds", required = false) List<Long> rolesIds,
-                               BindingResult bindingResult) {
+                               BindingResult bindingResult, Model model, Principal principal) {
         if (bindingResult.hasErrors()) {
-            return "/admin's_pages/edit_user";
+            model.addAttribute("error", "Ошибки в форме!");
+            return "admin's_pages/user_list";
         }
         if (!user.getPassword().equals(user.getPasswordConfirm())) {
-            bindingResult.rejectValue("passwordConfirm", "error.user", "Пароли не совпадают");
-            return "/admin's_pages/edit_user";
+            model.addAttribute("error", "Пароли не совпадают!");
+            model.addAttribute("currentUser", user);
+            addAttributesToMethods(model, principal);
+            return "admin's_pages/user_list";
         }
         roleService.setRolesToUser(user, rolesIds);
         userService.updateUser(user);
-        return "redirect:/admin/users";
+        return "redirect:/admin";
     }
 
-    @GetMapping(value = "/delete")
+    @PostMapping(value = "/delete")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public String deleteUser(@RequestParam(value = "id") Long id) {
-        userService.deleteUser(id);
-        return "redirect:/admin/users";
+    public String deleteUser(@ModelAttribute("user") User user) {
+        userService.deleteUser(user.getId());
+        return "redirect:/admin";
     }
 }
