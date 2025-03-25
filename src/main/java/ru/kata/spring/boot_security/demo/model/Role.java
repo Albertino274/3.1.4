@@ -1,7 +1,12 @@
 package ru.kata.spring.boot_security.demo.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Objects;
@@ -14,11 +19,10 @@ public class Role implements GrantedAuthority {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name_role")
+    @Column(name = "name_role", unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "roles")
-    @JsonBackReference
     private Set<User> users;
 
     public Role() {
@@ -64,6 +68,7 @@ public class Role implements GrantedAuthority {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
         return Objects.equals(id, role.id) && Objects.equals(name, role.name);
@@ -76,6 +81,6 @@ public class Role implements GrantedAuthority {
 
     @Override
     public String toString() {
-        return this.name;
+        return name;
     }
 }

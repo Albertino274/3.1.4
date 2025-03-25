@@ -1,11 +1,10 @@
 package ru.kata.spring.boot_security.demo.model;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class UserDTO {
+public class UserDto {
     private Long id;
     private String firstName;
     private String lastName;
@@ -15,17 +14,12 @@ public class UserDTO {
     private String password;
     private Set<String> roles = new HashSet<>();
 
-    public UserDTO() {
+    public UserDto() {
     }
 
-    public UserDTO(Long id,
-                   Set<String> roles,
-                   String password,
-                   String phoneNumber,
-                   Integer age,
-                   String email,
-                   String lastName,
-                   String firstName) {
+    public UserDto(Long id, Set<String> roles, String password,
+                   String phoneNumber, Integer age, String email,
+                   String lastName, String firstName) {
         this.id = id;
         this.roles = roles;
         this.password = password;
@@ -34,6 +28,15 @@ public class UserDTO {
         this.email = email;
         this.lastName = lastName;
         this.firstName = firstName;
+    }
+
+    // Геттеры и сеттеры
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getFirstName() {
@@ -50,14 +53,6 @@ public class UserDTO {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getEmail() {
@@ -96,13 +91,29 @@ public class UserDTO {
         return roles;
     }
 
-    public void setRoles(List<String> roles) {
-        this.roles = new HashSet<>(roles);
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserDto userDto = (UserDto) o;
+        return Objects.equals(id, userDto.id) &&
+                Objects.equals(email, userDto.email) &&
+                Objects.equals(firstName, userDto.firstName) &&
+                Objects.equals(lastName, userDto.lastName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, email, firstName, lastName);
     }
 
     @Override
     public String toString() {
-        return "UserDTO{" +
+        return "UserDto{" +
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
@@ -111,17 +122,5 @@ public class UserDTO {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", roles=" + roles +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        UserDTO userDTO = (UserDTO) o;
-        return Objects.equals(id, userDTO.id) && Objects.equals(firstName, userDTO.firstName) && Objects.equals(lastName, userDTO.lastName) && Objects.equals(email, userDTO.email) && Objects.equals(age, userDTO.age) && Objects.equals(phoneNumber, userDTO.phoneNumber) && Objects.equals(password, userDTO.password) && Objects.equals(roles, userDTO.roles);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, firstName, lastName, email, age, phoneNumber, password, roles);
     }
 }
