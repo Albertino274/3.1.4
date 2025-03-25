@@ -6,8 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 
@@ -16,10 +18,12 @@ import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 @EnableWebSecurity
 public class SecurityConfiguration {
     private final SuccessUserHandler successUserHandler;
+    private final UserDetailsService userDetailsService;
 
     @Autowired
     public SecurityConfiguration(SuccessUserHandler successUserHandler) {
         this.successUserHandler = successUserHandler;
+        this.userDetailsService = new InMemoryUserDetailsManager();
     }
 
     @Bean
@@ -33,7 +37,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests((authz) -> authz
                         .requestMatchers("/", "/registration").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user_page").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/user").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated())
                 .formLogin(formLog -> formLog
                         .loginPage("/login")

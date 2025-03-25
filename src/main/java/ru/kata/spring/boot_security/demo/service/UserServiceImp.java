@@ -1,32 +1,36 @@
-
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.model.UserDTO;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImp implements UserService {
+public class UserServiceImp implements UserService, UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final RoleService roleService;
 
     @Autowired
     public UserServiceImp(UserRepository userRepositoryInt,
                           PasswordEncoder passwordEncoder,
-                          RoleRepository roleRepository) {
+                          RoleRepository roleRepository, RoleService roleService) {
         this.userRepository = userRepositoryInt;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.roleService = roleService;
     }
 
 
@@ -50,8 +54,8 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Long id) {
-        userRepository.delete(userRepository.findUserById(id));
+    public void deleteUser(User user) {
+        userRepository.delete(userRepository.findUserByEmail(user.getEmail()));
     }
 
     @Override
@@ -63,8 +67,8 @@ public class UserServiceImp implements UserService {
         existingUser.setLastName(user.getLastName());
         existingUser.setEmail(user.getEmail());
         existingUser.setAge(user.getAge());
-        if (!user.getPassword().equals(existingUser.getPassword())) {
-            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            if (!user.getPassword().equals(existingUser.getPassword())) {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
             }
         }
@@ -77,24 +81,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public void saveUser(User user, List<Long> rolesIds) {
-        Set<Role> roles = new HashSet<>();
-        if (rolesIds != null) {
-            for (Long roleId : rolesIds) {
-                Role role = roleRepository.findById(roleId).orElse(null);
-                if (role != null) {
-                    roles.add(role);
-                }
-            }
-            user.setRoles(roles);
-        } else {
-            Role userRole = roleRepository.findByName("USER");
-            if (userRole == null) {
-                userRole = new Role(1L, "USER");
-                roleRepository.save(userRole);
-            }
-            user.setRoles(Collections.singleton(userRole));
-        }
+    public void saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
@@ -129,5 +116,47 @@ public class UserServiceImp implements UserService {
     public boolean isUser(User user) {
         return user.getRoles().stream()
                 .anyMatch(rolesIds -> rolesIds.getName().equals("USER"));
+    }
+
+    @Override
+    public UserDTO setDataToUser(User user) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setFirstName(user.getFirstName());
+        userDTO.setLastName(user.getLastName());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setAge(user.getAge());
+        userDTO.setPhoneNumber(user.getPhoneNumber());
+        userDTO.setRoles(user
+                .getRoles()
+                .stream()
+                .map(Role::getName)
+                .collect(Collectors.toList()));
+        return userDTO;
+    }
+
+    @Override
+    public User convertDataFromUserDTO(UserDTO userDTO) {
+        User user = new User();
+        if (userDTO.getId() != null) {
+            user.setId(userDTO.getId());
+        }
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setAge(userDTO.getAge());
+        user.setPhoneNumber(userDTO.getPhoneNumber());
+        user.setEmail(userDTO.getEmail());
+        System.out.println(userDTO.getPassword());
+
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            user.setPassword(userDTO.getPassword());
+        } else {
+            user.setPassword(userRepository.findUserByEmail(userDTO.getEmail()).getPassword());
+        }
+
+        user.setRoles(userDTO.getRoles()
+                .stream().map(roleService::findRoleByName)
+                .collect(Collectors.toSet()));
+        return user;
     }
 }

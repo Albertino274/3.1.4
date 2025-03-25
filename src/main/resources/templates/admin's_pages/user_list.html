@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Список пользователей</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         .title {
             position: fixed;
@@ -88,17 +87,63 @@
             color: white;
         }
 
+        .title_table_head {
+            font-size: 30px;
+        }
+
 
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showUserInfo();
+            fetch('/admin/users', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    fillTableWithUsers(data);
+                })
+                .catch(error => console.log('Ошибка при заполнении таблицы:', error));
+
+            function fillTableWithUsers(users) {
+                const tbody = document.querySelector('#tableUsers tbody');
+                tbody.innerHTML = '';
+
+                users.forEach((user, index) => {
+                    const line = document.createElement('tr');
+                    line.setAttribute('data-id', user.id);
+
+                    line.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${user.firstName}</td>
+                        <td>${user.lastName}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phoneNumber}</td>
+                        <td>${user.age}</td>
+                        <td>${user.roles}</td>
+                        <td>
+                            <button class="btn btn-info" onclick="editUser(${user.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteUser(${user.id})">Delete</button>
+                        </td>
+                    `;
+
+                    tbody.appendChild(line);
+                });
+            }
+        });
+    </script>
 </head>
 <body>
 <!-- Заголовок -->
 <div class="title">
     <div class="text-block">
-        <span th:text="${userTitle.email}">test</span> &nbsp;with roles:&nbsp; <span
-            th:text="${userTitle.roles}">test</span>
+        <span id="titleEmailCurrent">test</span> &nbsp;with roles:&nbsp; <span
+            id="titleRolesCurrent">test</span>
     </div>
-    <a href="/logout" class="text-block-button">Выйти</a>
+    <a href="/logout" class="text-block-button">Logout</a>
 </div>
 <!-- Боковая панель -->
 <div class="d-flex">
@@ -106,13 +151,13 @@
         <div class="sidebar-links">
             <!-- Вкладки боковой панели -->
             <ul class="nav nav-pills nav-fill flex-column" id="roleTabs" role="tablist">
-                <li class="nav-item" role="presentation" th:if="${isAdminRole}">
+                <li class="nav-item" role="presentation" id="admin-tab-container">
                     <button class="nav-link active custom-nav-button" id="admin-tab" data-bs-toggle="tab"
                             data-bs-target="#admin-content"
                             type="button" role="tab" aria-controls="admin-content" aria-selected="true">ADMIN
                     </button>
                 </li>
-                <li class="nav-item" role="presentation" th:if="${isUserRole}">
+                <li class="nav-item" role="presentation" id="user-tab-container">
                     <button class="nav-link custom-nav-button" id="user-tab" data-bs-toggle="tab"
                             data-bs-target="#user-content" type="button"
                             role="tab" aria-controls="user-content" aria-selected="false">USER
@@ -145,10 +190,9 @@
                 <div class="tab-content" id="usersTabContent">
                     <!-- Наполнение первой вкладки с пользователями -->
                     <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
-                        <div th:if="${error}" class="alert alert-danger" th:text="${error}" id="passwordsModal"></div>
-                        <table class="table table-bordered">
+                        <h1 class="title_table_head">User's information-page</h1>
+                        <table class="table table-bordered" id="tableUsers">
                             <thead>
-                            <h1>User's information-page</h1>
                             <tr class="title-table">
                                 <th colspan="8">Ваши данные:</th>
                             <tr>
@@ -162,93 +206,57 @@
                                 <th>Действия</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            <tr th:each="user, stat : ${user_list}">
-                                <td th:text="${stat.index + 1}">1</td>
-                                <td th:text="${user.firstName}">John</td>
-                                <td th:text="${user.lastName}">Doe</td>
-                                <td th:text="${user.email}">john.doe@example.com</td>
-                                <td th:text="${user.phoneNumber}">123-456-7890</td>
-                                <td th:text="${user.age}">New York, USA</td>
-                                <td th:text="${user.roles}">User</td>
-                                <td>
-                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal"
-                                            data-bs-target="#actionsModal" data-bs-whatever="edit-button"
-                                            th:data-id="${user.id}"
-                                            th:data-first-name="${user.firstName}"
-                                            th:data-last-name="${user.lastName}"
-                                            th:data-email="${user.email}"
-                                            th:data-phone-number="${user.phoneNumber}"
-                                            th:data-age="${user.age}"
-                                            th:data-roles="${#strings.arrayJoin(user.roles.![id], ',')}">Edit
-                                    </button>
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                            data-bs-target="#actionsModal" data-bs-whatever="delete-button"
-                                            th:data-id="${user.id}"
-                                            th:data-first-name="${user.firstName}"
-                                            th:data-last-name="${user.lastName}"
-                                            th:data-email="${user.email}"
-                                            th:data-phone-number="${user.phoneNumber}"
-                                            th:data-age="${user.age}"
-                                            th:data-roles="${#strings.arrayJoin(user.roles.![id], ',')}">Delete
-                                    </button>
-                                </td>
-                            </tr>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
 
                     <!-- Наполнение второй вкладки для добавления нового пользователя -->
                     <div class="tab-pane fade" id="add-user" role="tabpanel" aria-labelledby="add-user-tab">
-                        <form th:action="@{'/admin/save'}" th:object="${newUser}" method="post" id="add-user-form">
+                        <form id="add-user-form">
                             <div class="mb-3">
                                 <label for="firstName" class="form-label">Имя</label>
-                                <input type="text" class="form-control" id="firstName" th:field="*{firstName}"
+                                <input type="text" class="form-control" id="firstName" name="firstName"
                                        placeholder="Ivan" required>
                             </div>
                             <div class="mb-3">
                                 <label for="lastName" class="form-label">Фамилия</label>
-                                <input type="text" class="form-control" id="lastName" th:field="*{lastName}"
+                                <input type="text" class="form-control" id="lastName" name="lastName"
                                        placeholder="Ivanov" required>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email (будет использован в качестве
                                     логина)</label>
-                                <input type="email" class="form-control" id="email" th:field="*{email}"
+                                <input type="email" class="form-control" id="email" name="email"
                                        placeholder="example@example.com" required>
                             </div>
                             <div class="mb-3">
                                 <label for="phoneNumber" class="form-label">Телефон</label>
-                                <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}"
+                                <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
                                        placeholder="+7(000)000-0000" required>
                             </div>
                             <div class="mb-3">
                                 <label for="age" class="form-label">Возраст</label>
-                                <input type="number" class="form-control" id="age" th:field="*{age}"
+                                <input type="number" class="form-control" id="age" name="age"
                                        placeholder="18" required>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Пароль</label>
-                                <input type="password" class="form-control" id="password" th:field="*{password}"
+                                <input type="password" class="form-control" id="password"  name="password"
                                        placeholder="password" required>
                             </div>
                             <div class="mb-3">
                                 <label for="passwordConfirm" class="form-label">Подтверждение пароля</label>
-                                <input type="password" class="form-control" id="passwordConfirm"
-                                       th:field="*{passwordConfirm}"
+                                <input type="password" class="form-control" id="passwordConfirm" name="passwordConfirm"
                                        placeholder="password" required>
-                                <div id="passwordError" class="text-danger" style="display: none">Пароли не
-                                    совпадают!
-                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="rolesSelect" class="form-label">Роли</label>
-                                <select class="form-select" id="rolesSelect" name="rolesIds" multiple required>
-                                    <option value="1">USER</option>
-                                    <option value="2">ADMIN</option>
+                                <select class="form-select" id="rolesSelect" name="roles" multiple required>
+                                    <option value="USER">USER</option>
+                                    <option value="ADMIN">ADMIN</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary" id="save-new-user-button">SAVE</button>
+                            <button type="button" class="btn btn-primary" id="save-new-user-button">SAVE</button>
                         </form>
                     </div>
                 </div>
@@ -273,13 +281,13 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:value="userTitle">
-                            <td th:text="${userTitle.firstName}">John</td>
-                            <td th:text="${userTitle.lastName}">Doe</td>
-                            <td th:text="${userTitle.email}">john.doe@example.com</td>
-                            <td th:text="${userTitle.phoneNumber}">123-456-7890</td>
-                            <td th:text="${userTitle.age}">New York, USA</td>
-                            <td th:text="${userTitle.roles}">User</td>
+                        <tr>
+                            <td id="firstNameCurrent">John</td>
+                            <td id="lastNameCurrent">Doe</td>
+                            <td id="emailCurrent">john.doe@example.com</td>
+                            <td id="phoneNumberCurrent">123-456-7890</td>
+                            <td id="ageCurrent">18</td>
+                            <td id="rolesCurrent">User</td>
                         </tr>
                         </tbody>
                     </table>
@@ -293,14 +301,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalEdit"> Edit user </h5>
+                    <h5 class="modal-title" id="modalTitle"> Edit user </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                 </div>
                 <div class="modal-body">
-                    <form th:action="@{/admin/save_edit}" method="post" id="modalWindowAction">
+                    <form id="modalWindowAction">
                         <input type="hidden" name="id">
-                        <input type="hidden" name="action" id="actionField" value="save">
-
                         <div class="mb-3">
                             <label for="editFirstName" class="form-label">Имя</label>
                             <input type="text" class="form-control" id="editFirstName" name="firstName" required>
@@ -330,11 +336,11 @@
                         <div class="mb-3">
                             <label for="editPasswordConfirm" class="form-label">Подтверждение пароля</label>
                             <input type="password" class="form-control" id="editPasswordConfirm"
-                                   name="passwordConfirm" placeholder="password" required>
+                                   name="passwordConfirm" placeholder="password">
                         </div>
                         <div class="mb-3">
                             <label for="editRolesSelect" class="form-label">Роли</label>
-                            <select class="form-select" id="editRolesSelect" name="rolesIds" multiple required>
+                            <select class="form-select" id="editRolesSelect" name="roles" multiple required>
                                 <option value="1">USER</option>
                                 <option value="2">ADMIN</option>
                             </select>
@@ -342,15 +348,17 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary" id="submitButton">SUBMIT</button>
-                    <button type="submit" class="btn btn-primary" id="removeButton">DELETE</button>
+                    <button type="button" class="btn btn-primary" id="submitButton">SUBMIT</button>
+                    <button type="button" class="btn btn-primary" id="removeButton">DELETE</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/edit_user_modal.js"></script>
-<script src="/password_confirm.js"></script>
+<script src="/edit_user.js"></script>
+<script src="/user's_info.js"></script>
+<script src="/delete_user.js"></script>
+<script src="/save_user.js"></script>
 </body>
 </html>

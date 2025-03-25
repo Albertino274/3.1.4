@@ -1,7 +1,6 @@
 package ru.kata.spring.boot_security.demo.test_users;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -55,7 +54,7 @@ public class Init {
             user.setAge(35);
             user.setRoles(new HashSet<>(Collections.singleton(roleService.findRoleByName("USER"))));
 
-            userService.saveUser(user, Collections.singletonList(1L));
+            userService.saveUser(user);
             System.out.println(user.getPassword());
         }
 
@@ -74,11 +73,7 @@ public class Init {
 
             admin.setRoles(roles);
 
-            List<Long> rolesIds = new ArrayList<>();
-            rolesIds.add(1L);
-            rolesIds.add(2L);
-
-            userService.saveUser(admin, rolesIds);
+            userService.saveUser(admin);
             System.out.println(admin.getPassword());
         }
     }

@@ -90,15 +90,37 @@
 
 
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/user_page', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Ошибка HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    delete data.password;
+                    getUserElements(data);
+                })
+                .catch(error => console.error('Произошла ошибка при заполнении страницы'));
+        })
+    </script>
 </head>
 <body>
 <!-- Заголовок -->
 <div class="title">
     <div class="text-block">
-        <span th:text="${user.email}">test</span> &nbsp;with roles:&nbsp; <span
-            th:text="${user.roles}">test</span>
+        <span id="titleEmailCurrent">test</span> &nbsp;with roles:&nbsp;
+        <span id="titleRolesCurrent">test</span>
     </div>
-    <a href="/logout" class="text-block-button">Выйти</a>
+    <a href="/logout" class="text-block-button">Logout</a>
 </div>
 <!-- Боковая панель -->
 <div class="d-flex">
@@ -106,7 +128,7 @@
         <div class="sidebar-links">
             <!-- Вкладки боковой панели -->
             <ul class="nav nav-pills nav-fill flex-column" id="roleTabs" role="tablist">
-                <li class="nav-item" role="presentation" th:if="${isUserRole}">
+                <li class="nav-item" role="presentation">
                     <button class="nav-link custom-nav-button active" id="user-tab" data-bs-toggle="tab"
                             data-bs-target="#user-content" type="button"
                             role="tab" aria-controls="user-content" aria-selected="true">USER
@@ -136,13 +158,13 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:value="user">
-                        <td th:text="${user.firstName}">John</td>
-                        <td th:text="${user.lastName}">Doe</td>
-                        <td th:text="${user.email}">john.doe@example.com</td>
-                        <td th:text="${user.phoneNumber}">123-456-7890</td>
-                        <td th:text="${user.age}">New York, USA</td>
-                        <td th:text="${user.roles}">User</td>
+                    <tr>
+                        <td id="firstNameCurrent">Jane</td>
+                        <td id="lastNameCurrent">Doe</td>
+                        <td id="emailCurrent">john.doe@example.com</td>
+                        <td id="phoneNumberCurrent">123-456-7890</td>
+                        <td id="ageCurrent">18</td>
+                        <td id="rolesCurrent">User, Admin</td>
                     </tr>
                     </tbody>
                 </table>
@@ -151,5 +173,6 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/user's_info.js"></script>
 </body>
 </html>
