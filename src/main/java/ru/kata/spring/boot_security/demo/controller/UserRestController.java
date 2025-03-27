@@ -18,7 +18,6 @@ import ru.kata.spring.boot_security.demo.service.UserConverter;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,51 +30,6 @@ public class UserRestController {
         this.userConverter = userConverter;
     }
 
-    // Admin-only endpoints
-    @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<User> users = userService.getUsers();
-        List<UserDto> usersDto = users.stream()
-                .map(userConverter::convertToDto)
-                .toList();
-        return ResponseEntity.ok(usersDto);
-    }
-
-    @GetMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
-        User user = userService.getUser(id);
-        return ResponseEntity.ok(userConverter.convertToDto(user));
-    }
-
-    @PostMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> createUser(@RequestBody UserDto userDto) {
-        User user = userConverter.convertFromDto(userDto);
-        userService.saveUser(user);
-        return ResponseEntity.ok(Map.of("message", "User created successfully"));
-    }
-
-    @PutMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> updateUser(
-            @PathVariable Long id,
-            @RequestBody UserDto userDto) {
-        userDto.setId(id);
-        User user = userConverter.convertFromDto(userDto);
-        userService.updateUser(user);
-        return ResponseEntity.ok(Map.of("message", "User updated successfully"));
-    }
-
-    @DeleteMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
-    }
-
-    // Common endpoints (for both USER and ADMIN roles)
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<UserDto> getCurrentUser(
@@ -84,11 +38,58 @@ public class UserRestController {
         return ResponseEntity.ok(userConverter.convertToDto(user));
     }
 
-    @GetMapping("/admin/current")
+    @RestController
+    @RequestMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> getCurrentAdminUser(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getUserByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(userConverter.convertToDto(user));
+    public static class AdminUserController {
+        private final UserService userService;
+        private final UserConverter userConverter;
+
+        public AdminUserController(UserService userService, UserConverter userConverter) {
+            this.userService = userService;
+            this.userConverter = userConverter;
+        }
+
+        @GetMapping
+        public ResponseEntity<List<UserDto>> getAllUsers() {
+            List<User> users = userService.getUsers();
+            List<UserDto> usersDto = users.stream()
+                    .map(userConverter::convertToDto)
+                    .toList();
+            return ResponseEntity.ok(usersDto);
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+            User user = userService.getUser(id);
+            return ResponseEntity.ok(userConverter.convertToDto(user));
+        }
+
+        @PostMapping
+        public ResponseEntity<OperationResponse> createUser(
+               @RequestBody UserDto userDto) {
+            User user = userConverter.convertFromDto(userDto);
+            userService.saveUser(user);
+            return ResponseEntity.ok(new OperationResponse("User created successfully"));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<OperationResponse> updateUser(
+                @PathVariable Long id,
+                @RequestBody UserDto userDto) {
+            userDto.setId(id);
+            User user = userConverter.convertFromDto(userDto);
+            userService.updateUser(user);
+            return ResponseEntity.ok(new OperationResponse("User updated successfully"));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<OperationResponse> deleteUser(@PathVariable Long id) {
+            userService.deleteUser(id);
+            return ResponseEntity.ok(new OperationResponse("User deleted successfully"));
+        }
+    }
+
+    public record OperationResponse(String message) {
     }
 }
