@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.model.UserDto;
+import ru.kata.spring.boot_security.demo.service.UserConverter;
 import ru.kata.spring.boot_security.demo.service.UserService;
-import ru.kata.spring.boot_security.demo.util.UserConverter;
 
 import java.util.List;
 import java.util.Map;
@@ -23,11 +23,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/users")
 @PreAuthorize("hasRole('ADMIN')")
-public class UserAdminController {
+public class UserRestController {
     private final UserService userService;
     private final UserConverter userConverter;
 
-    public UserAdminController(UserService userService, UserConverter userConverter) {
+    public UserRestController(UserService userService, UserConverter userConverter) {
         this.userService = userService;
         this.userConverter = userConverter;
     }

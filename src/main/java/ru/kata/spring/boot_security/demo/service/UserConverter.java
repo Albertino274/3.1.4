@@ -1,10 +1,9 @@
-package ru.kata.spring.boot_security.demo.util;
+package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.stereotype.Component;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.model.UserDto;
-import ru.kata.spring.boot_security.demo.service.RoleService;
 
 import java.util.Set;
 import java.util.stream.Collectors;

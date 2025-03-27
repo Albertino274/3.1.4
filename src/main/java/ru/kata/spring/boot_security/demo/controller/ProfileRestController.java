@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.model.UserDto;
+import ru.kata.spring.boot_security.demo.service.UserConverter;
 import ru.kata.spring.boot_security.demo.service.UserService;
-import ru.kata.spring.boot_security.demo.util.UserConverter;
 
 @RestController
 @RequestMapping("/api/user/profile")
-public class UserProfileController {
+public class ProfileRestController {
     private final UserService userService;
     private final UserConverter userConverter;
 
     @Autowired
-    public UserProfileController(UserService userService, UserConverter userConverter) {
+    public ProfileRestController(UserService userService, UserConverter userConverter) {
         this.userService = userService;
         this.userConverter = userConverter;
     }
